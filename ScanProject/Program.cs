@@ -20,7 +20,6 @@ namespace ScanProject
             {
                 string pathToDir = args[0];
                 string nameOfFil = args[1];
-                ChooseOpenFileOrNot = Console.ReadLine();
 
                 pathToScan.ScanPath(pathToDir, nameOfFil);
                 
