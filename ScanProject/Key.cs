@@ -10,7 +10,7 @@ namespace ScanProject
     class Key
     {
         public string HashCode { get; set; }
-        public string Name { get; set; }
+
         
 
         public override bool Equals(object obj)
