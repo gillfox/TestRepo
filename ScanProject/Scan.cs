@@ -41,21 +41,21 @@ namespace ScanProject
             var queryDupFiles =
                 from file in fileList
                 group file.FullName.Substring(charsToSkip) by
-                    new Key { HashCode = ComputeMD5Checksum(file.FullName) }   into fileGroup
-                where fileGroup.Count() > 1
+                    new Key { HashCode = ComputeMD5Checksum(file.FullName) } into fileGroup
+                where fileGroup.Count() > 1 && fileGroup.Key.HashCode != ""
                 select fileGroup;
-
+            
             ShowResults<Key, string>(queryDupFiles, openFileOrNot);
         }
 
-        private void ShowResults<K, V>(IEnumerable<System.Linq.IGrouping<K, V>> groupByExtList, bool openFileOrNot = true)
+        private void ShowResults<K, V>(IEnumerable<System.Linq.IGrouping<K, V>> groupByExtList, bool saveToFile = true)
         {
             stopWatch.Stop();
             TimeSpan ts = stopWatch.Elapsed;
             string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
             ts.Hours, ts.Minutes, ts.Seconds,
             ts.Milliseconds / 10);
-            if (openFileOrNot == true)
+            if (saveToFile)
             {   
                 StreamWriter textFile = new StreamWriter(pathToFile);
                 
@@ -88,25 +88,24 @@ namespace ScanProject
 
         private string ComputeMD5Checksum(string path)
         {
-            Random hashForExceptions = new Random();
             try
             {
                 FileStream file = new FileStream(path, FileMode.Open);
-                MD5 md5Sum = new MD5CryptoServiceProvider();
-                byte[] retVal = md5Sum.ComputeHash(file);
+                MD5 hashProcessor = new MD5CryptoServiceProvider();
+                byte[] retVal = hashProcessor.ComputeHash(file);
                 file.Close();
 
-                StringBuilder stringBuilder = new StringBuilder();
+                StringBuilder hashString = new StringBuilder();
                 for (int i = 0; i < retVal.Length; i++)
                 {
-                    stringBuilder.Append(retVal[i].ToString("x2"));
+                    hashString.Append(retVal[i].ToString("x2"));
                 }
 
-                return stringBuilder.ToString();
+                return hashString.ToString();
             }
             catch
             {
-                return hashForExceptions.Next().ToString();
+                return "";
             }
         }
     }
