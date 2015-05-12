@@ -26,7 +26,7 @@ namespace ScanProject
             
         }
 
-        public void ScanPath(string pathToDir, string nameOfFile = "result.txt", bool openFileOrNot = true)
+        public void ScanPath(string pathToDir, string nameOfFile = "result.txt", bool saveToFile = true)
         {
             this.pathToFile = pathToDir + "\\" + nameOfFile;
             string startFolder = pathToDir;
@@ -45,7 +45,7 @@ namespace ScanProject
                 where fileGroup.Count() > 1 && fileGroup.Key.HashCode != ""
                 select fileGroup;
             
-            ShowResults<Key, string>(queryDupFiles, openFileOrNot);
+            ShowResults<Key, string>(queryDupFiles, saveToFile);
         }
 
         private void ShowResults<K, V>(IEnumerable<System.Linq.IGrouping<K, V>> groupByExtList, bool saveToFile = true)
