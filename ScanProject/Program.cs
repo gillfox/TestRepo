@@ -14,13 +14,12 @@ namespace ScanProject
     {
         static void Main(string[] args)
         {
-            string ChooseOpenFileOrNot;
+            string OpenFileOrNot;
             Scan pathToScan = new Scan();
             if (args.Length == 2)
             {
                 string pathToDir = args[0];
                 string nameOfFil = args[1];
-                
 
                 pathToScan.ScanPath(pathToDir, nameOfFil);
                 
@@ -37,11 +36,11 @@ arg1 -  Name of file result. (Example - result.txt)");
             else
             {
                 Console.Write("Please write path (Example - C:\\New foulder) : ");
-                string p = Console.ReadLine();
+                string pathToDir = Console.ReadLine();
                 Console.WriteLine("Do you want to save results to a file ? (y/n):");
-                ChooseOpenFileOrNot = Console.ReadLine();
-                pathToScan.ScanPath(p, "result.txt", ChooseOpenFileOrNot);
-                Console.WriteLine("The program is successfully done!");
+                OpenFileOrNot = Console.ReadLine();
+                pathToScan.ScanPath(pathToDir, "result.txt", OpenFileOrNot == "y");
+                Console.WriteLine("The program was successfully done!");
                 Console.ReadKey();
             }            
         }

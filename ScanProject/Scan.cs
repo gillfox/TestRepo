@@ -14,7 +14,7 @@ namespace ScanProject
     class Scan
     {
         int countFiles, countDir;
-        string openFile, pathToFile;
+        string pathToFile;
         public Stopwatch stopWatch = new Stopwatch();
         
         public Scan()
@@ -22,14 +22,12 @@ namespace ScanProject
             countFiles = 0;
             countDir = 0;
             pathToFile = "";
-            openFile = "";
             stopWatch.Start();
             
         }
 
-        public void ScanPath(string pathToDir, string nameOfFile = "result.txt", string openF = "y")
+        public void ScanPath(string pathToDir, string nameOfFile = "result.txt", bool openFileOrNot = true)
         {
-            this.openFile = openF;
             this.pathToFile = pathToDir + "\\" + nameOfFile;
             string startFolder = pathToDir;
             int charsToSkip = startFolder.Length;
@@ -47,32 +45,28 @@ namespace ScanProject
                 where fileGroup.Count() > 1
                 select fileGroup;
 
-            var list = queryDupFiles.ToList();
-
-            ShowResults<Key, string>(queryDupFiles, openFile);
+            ShowResults<Key, string>(queryDupFiles, openFileOrNot);
         }
 
-        private void ShowResults<K, V>(IEnumerable<System.Linq.IGrouping<K, V>> groupByExtList, string openFile)
+        private void ShowResults<K, V>(IEnumerable<System.Linq.IGrouping<K, V>> groupByExtList, bool openFileOrNot = true)
         {
-            int numOfGroup = 1;
             stopWatch.Stop();
             TimeSpan ts = stopWatch.Elapsed;
             string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
             ts.Hours, ts.Minutes, ts.Seconds,
             ts.Milliseconds / 10);
-            if (openFile == "y")
+            if (openFileOrNot == true)
             {   
                 StreamWriter textFile = new StreamWriter(pathToFile);
                 
                 foreach (var filegroup in groupByExtList)
                 {
-                    textFile.WriteLine("\n\n\nGroup name - {0}", numOfGroup);
+                    textFile.WriteLine("\n\n\nGroup name - {0}", filegroup.Key.ToString());
 
                     foreach (var fileName in filegroup)
                     {
                         textFile.WriteLine("{0}", fileName);
                     }
-                    numOfGroup++;
                 }
                 textFile.WriteLine("\n\n\nDirectories : {0} Files : {1} Run Time : {2} ", this.countDir, this.countFiles, elapsedTime);
                 textFile.Close();
@@ -81,12 +75,11 @@ namespace ScanProject
             {
                 foreach (var filegroup in groupByExtList)
                 {
-                    Console.WriteLine("\n\n\nGroup name - {0}", numOfGroup);
+                    Console.WriteLine("\n\n\nGroup name - {0}", filegroup.Key.ToString());
                     foreach (var fileName in filegroup)
                     {
                         Console.WriteLine("{0}", fileName);
                     }
-                    numOfGroup++;
                 }
                 Console.WriteLine("\n\n\nDirectories : {0} Files : {1} Run Time : {2} ", this.countDir, this.countFiles, elapsedTime);
 
@@ -95,24 +88,25 @@ namespace ScanProject
 
         private string ComputeMD5Checksum(string path)
         {
+            Random hashForExceptions = new Random();
             try
             {
                 FileStream file = new FileStream(path, FileMode.Open);
-                MD5 md5 = new MD5CryptoServiceProvider();
-                byte[] retVal = md5.ComputeHash(file);
+                MD5 md5Sum = new MD5CryptoServiceProvider();
+                byte[] retVal = md5Sum.ComputeHash(file);
                 file.Close();
 
-                StringBuilder sb = new StringBuilder();
+                StringBuilder stringBuilder = new StringBuilder();
                 for (int i = 0; i < retVal.Length; i++)
                 {
-                    sb.Append(retVal[i].ToString("x2"));
+                    stringBuilder.Append(retVal[i].ToString("x2"));
                 }
 
-                return sb.ToString();
+                return stringBuilder.ToString();
             }
             catch
             {
-                return "";
+                return hashForExceptions.Next().ToString();
             }
         }
     }
