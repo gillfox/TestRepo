@@ -28,6 +28,8 @@ namespace ScanProject
 
         public void ScanPath(string pathToDir, string nameOfFile = "result.txt", bool saveToFile = true)
         {
+            FileAttributes newGroupOfFiles = new FileAttributes();
+           
             this.pathToFile = pathToDir + "\\" + nameOfFile;
             string startFolder = pathToDir;
             int charsToSkip = startFolder.Length;
@@ -36,36 +38,73 @@ namespace ScanProject
             IEnumerable<FileInfo> fileList = dir.GetFiles("*.*", SearchOption.AllDirectories);
             countDir = dir.GetDirectories().Count();
             countFiles = fileList.Count();
+            Dictionary<string, string> filesAndHashes = new Dictionary<string, string>();
             
+            Dictionary<string, List<string>> filterFiles = new Dictionary<string, List<string>>();
 
-            var queryDupFiles =
-                from file in fileList
-                group file.FullName.Substring(charsToSkip) by
-                    new Key { HashCode = ComputeMD5Checksum(file.FullName) } into fileGroup
-                where fileGroup.Count() > 1 && fileGroup.Key.HashCode != ""
-                select fileGroup;
+            foreach (var file in fileList)
+            {
+                filesAndHashes.Add(file.FullName, ComputeMD5Checksum(file.FullName));
+            }
             
-            ShowResults<Key, string>(queryDupFiles, saveToFile);
+            Console.WriteLine("Starting");
+            foreach(var file in fileList)
+            {
+                List<string> similFiles = new List<string>();
+                string HashCodeOfFile = ComputeMD5Checksum(file.FullName);
+                if (filterFiles.ContainsKey(HashCodeOfFile))
+                {
+                    continue;
+                }
+                foreach(var siFile in  filesAndHashes.Keys)
+                {
+                    if (HashCodeOfFile == filesAndHashes[siFile])
+                    {
+                        similFiles.Add(siFile);
+                    }
+                }
+                if (similFiles.Count > 1 && HashCodeOfFile != "") 
+                {
+                    filterFiles.Add(HashCodeOfFile, similFiles);
+                }
+                Console.WriteLine("d");
+                
+            }
+
+            Console.WriteLine("DONE");
+            ShowResults(filterFiles);
+            
         }
 
-        private void ShowResults<K, V>(IEnumerable<System.Linq.IGrouping<K, V>> groupByExtList, bool saveToFile = true)
+        private void ShowResults(Dictionary<string, List<string>> groupByExtList, bool saveToFile = true)
         {
+            Console.WriteLine("Almost done");
             stopWatch.Stop();
             TimeSpan ts = stopWatch.Elapsed;
             string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
             ts.Hours, ts.Minutes, ts.Seconds,
             ts.Milliseconds / 10);
+
+            ICollection<string> Keys = groupByExtList.Keys;
+
+            foreach (string key in Keys)
+            {
+                Console.WriteLine("\n\n\n\nGroup name : " + key);
+                foreach (string item in groupByExtList[key])
+                {
+                    Console.WriteLine(item);
+                }
+            }
             if (saveToFile)
             {   
                 StreamWriter textFile = new StreamWriter(pathToFile);
                 
-                foreach (var filegroup in groupByExtList)
+                foreach (string key in Keys)
                 {
-                    textFile.WriteLine("\n\n\nGroup name - {0}", filegroup.Key.ToString());
-
-                    foreach (var fileName in filegroup)
+                    textFile.WriteLine("\n\n\n\nGroup name : " + key);
+                    foreach (string item in groupByExtList[key])
                     {
-                        textFile.WriteLine("{0}", fileName);
+                        textFile.WriteLine(item);
                     }
                 }
                 textFile.WriteLine("\n\n\nDirectories : {0} Files : {1} Run Time : {2} ", this.countDir, this.countFiles, elapsedTime);
@@ -73,13 +112,13 @@ namespace ScanProject
             }
             else
             {
-                foreach (var filegroup in groupByExtList)
+                foreach (string key in Keys)
                 {
-                    Console.WriteLine("\n\n\nGroup name - {0}", filegroup.Key.ToString());
-                    foreach (var fileName in filegroup)
+                    Console.WriteLine("\n\n\n\nGroup name : " + key);
+                    foreach (string item in groupByExtList[key])
                     {
-                        Console.WriteLine("{0}", fileName);
-                    }
+                        Console.WriteLine(item);
+                    }   
                 }
                 Console.WriteLine("\n\n\nDirectories : {0} Files : {1} Run Time : {2} ", this.countDir, this.countFiles, elapsedTime);
 
