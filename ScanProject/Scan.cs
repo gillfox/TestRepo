@@ -16,6 +16,7 @@ namespace ScanProject
         int countFiles, countDir;
         string pathToFile;
         public Stopwatch stopWatch = new Stopwatch();
+        bool saveToFile;
         
         public Scan()
         {
@@ -23,78 +24,59 @@ namespace ScanProject
             countDir = 0;
             pathToFile = "";
             stopWatch.Start();
-            
+            saveToFile = false;
         }
 
         public void ScanPath(string pathToDir, string nameOfFile = "result.txt", bool saveToFile = true)
         {
-            FileAttributes newGroupOfFiles = new FileAttributes();
-           
             this.pathToFile = pathToDir + "\\" + nameOfFile;
-            string startFolder = pathToDir;
-            int charsToSkip = startFolder.Length;
-
-            DirectoryInfo dir = new DirectoryInfo(startFolder);
+            this.saveToFile = saveToFile;
+            DirectoryInfo dir = new DirectoryInfo(pathToDir);
             IEnumerable<FileInfo> fileList = dir.GetFiles("*.*", SearchOption.AllDirectories);
             countDir = dir.GetDirectories().Count();
             countFiles = fileList.Count();
+
             Dictionary<string, string> filesAndHashes = new Dictionary<string, string>();
             
-            Dictionary<string, List<string>> filterFiles = new Dictionary<string, List<string>>();
-
             foreach (var file in fileList)
             {
                 filesAndHashes.Add(file.FullName, ComputeMD5Checksum(file.FullName));
             }
-            
-            Console.WriteLine("Starting");
-            foreach(var file in fileList)
+
+            Dictionary<string, List<string>> filterFiles = new Dictionary<string, List<string>>();
+
+            foreach(var key in filesAndHashes.Keys)
             {
                 List<string> similFiles = new List<string>();
-                string HashCodeOfFile = ComputeMD5Checksum(file.FullName);
+                string HashCodeOfFile = filesAndHashes[key];
                 if (filterFiles.ContainsKey(HashCodeOfFile))
                 {
                     continue;
                 }
-                foreach(var siFile in  filesAndHashes.Keys)
+                foreach(var similKey in  filesAndHashes.Keys)
                 {
-                    if (HashCodeOfFile == filesAndHashes[siFile])
+                    if (HashCodeOfFile == filesAndHashes[similKey])
                     {
-                        similFiles.Add(siFile);
+                        similFiles.Add(similKey);
                     }
                 }
                 if (similFiles.Count > 1 && HashCodeOfFile != "") 
                 {
                     filterFiles.Add(HashCodeOfFile, similFiles);
-                }
-                Console.WriteLine("d");
-                
+                }                
             }
-
-            Console.WriteLine("DONE");
             ShowResults(filterFiles);
-            
         }
 
-        private void ShowResults(Dictionary<string, List<string>> groupByExtList, bool saveToFile = true)
+        private void ShowResults(Dictionary<string, List<string>> filterFiles)
         {
-            Console.WriteLine("Almost done");
             stopWatch.Stop();
             TimeSpan ts = stopWatch.Elapsed;
             string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
             ts.Hours, ts.Minutes, ts.Seconds,
             ts.Milliseconds / 10);
 
-            ICollection<string> Keys = groupByExtList.Keys;
-
-            foreach (string key in Keys)
-            {
-                Console.WriteLine("\n\n\n\nGroup name : " + key);
-                foreach (string item in groupByExtList[key])
-                {
-                    Console.WriteLine(item);
-                }
-            }
+            ICollection<string> Keys = filterFiles.Keys;
             if (saveToFile)
             {   
                 StreamWriter textFile = new StreamWriter(pathToFile);
@@ -102,7 +84,7 @@ namespace ScanProject
                 foreach (string key in Keys)
                 {
                     textFile.WriteLine("\n\n\n\nGroup name : " + key);
-                    foreach (string item in groupByExtList[key])
+                    foreach (string item in filterFiles[key])
                     {
                         textFile.WriteLine(item);
                     }
@@ -115,7 +97,7 @@ namespace ScanProject
                 foreach (string key in Keys)
                 {
                     Console.WriteLine("\n\n\n\nGroup name : " + key);
-                    foreach (string item in groupByExtList[key])
+                    foreach (string item in filterFiles[key])
                     {
                         Console.WriteLine(item);
                     }   
