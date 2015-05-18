@@ -11,14 +11,14 @@ using System.Threading;
 
 namespace ScanProject
 {
-    class Scan
+    class ScanAndGroup
     {
         int countFiles, countDir;
         string pathToFile;
         public Stopwatch stopWatch = new Stopwatch();
-        bool saveToFile;
-        
-        public Scan()
+        public bool saveToFile { get; set;}
+
+        public ScanAndGroup()
         {
             countFiles = 0;
             countDir = 0;
@@ -27,10 +27,9 @@ namespace ScanProject
             saveToFile = false;
         }
 
-        public void ScanPath(string pathToDir, string nameOfFile = "result.txt", bool saveToFile = true)
+        public void ScanPath(string pathToDir, string nameOfFile = "result.txt")
         {
             this.pathToFile = pathToDir + "\\" + nameOfFile;
-            this.saveToFile = saveToFile;
             DirectoryInfo dir = new DirectoryInfo(pathToDir);
             IEnumerable<FileInfo> fileList = dir.GetFiles("*.*", SearchOption.AllDirectories);
             countDir = dir.GetDirectories().Count();
@@ -43,9 +42,13 @@ namespace ScanProject
                 filesAndHashes.Add(file.FullName, ComputeMD5Checksum(file.FullName));
             }
 
-            Dictionary<string, List<string>> filterFiles = new Dictionary<string, List<string>>();
+            FilterForFiles(filesAndHashes);
+        }
 
-            foreach(var key in filesAndHashes.Keys)
+        public void FilterForFiles ( Dictionary<string, string> filesAndHashes)
+        {
+            Dictionary<string, List<string>> filterFiles = new Dictionary<string, List<string>>();
+            foreach (var key in filesAndHashes.Keys)
             {
                 List<string> similFiles = new List<string>();
                 string HashCodeOfFile = filesAndHashes[key];
@@ -53,19 +56,42 @@ namespace ScanProject
                 {
                     continue;
                 }
-                foreach(var similKey in  filesAndHashes.Keys)
+                foreach (var similKey in filesAndHashes.Keys)
                 {
                     if (HashCodeOfFile == filesAndHashes[similKey])
                     {
                         similFiles.Add(similKey);
                     }
                 }
-                if (similFiles.Count > 1 && HashCodeOfFile != "") 
+                if (similFiles.Count > 1 && HashCodeOfFile != "")
                 {
                     filterFiles.Add(HashCodeOfFile, similFiles);
-                }                
+                }
             }
             ShowResults(filterFiles);
+        }
+
+        private string ComputeMD5Checksum(string path)
+        {
+            try
+            {
+                FileStream file = new FileStream(path, FileMode.Open);
+                MD5 hashProcessor = new MD5CryptoServiceProvider();
+                byte[] retVal = hashProcessor.ComputeHash(file);
+                file.Close();
+
+                StringBuilder hashString = new StringBuilder();
+                for (int i = 0; i < retVal.Length; i++)
+                {
+                    hashString.Append(retVal[i].ToString("x2"));
+                }
+
+                return hashString.ToString();
+            }
+            catch
+            {
+                return "";
+            }
         }
 
         private void ShowResults(Dictionary<string, List<string>> filterFiles)
@@ -103,33 +129,9 @@ namespace ScanProject
                     }   
                 }
                 Console.WriteLine("\n\n\nDirectories : {0} Files : {1} Run Time : {2} ", this.countDir, this.countFiles, elapsedTime);
-
-            }
-        }
-
-        private string ComputeMD5Checksum(string path)
-        {
-            try
-            {
-                FileStream file = new FileStream(path, FileMode.Open);
-                MD5 hashProcessor = new MD5CryptoServiceProvider();
-                byte[] retVal = hashProcessor.ComputeHash(file);
-                file.Close();
-
-                StringBuilder hashString = new StringBuilder();
-                for (int i = 0; i < retVal.Length; i++)
-                {
-                    hashString.Append(retVal[i].ToString("x2"));
-                }
-
-                return hashString.ToString();
-            }
-            catch
-            {
-                return "";
             }
         }
     }
-    }
+}
     
 
