@@ -17,7 +17,7 @@ namespace ScanProject
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
             string OpenFileOrNot;
-            ScanAndGroup pathToScan = new ScanAndGroup();
+            Searcher pathToScan = new Searcher();
             if (args.Length == 2)
             {
                 string pathToDir = args[0];
@@ -57,7 +57,7 @@ arg1 -  Name of file result. (Example - result.txt)");
         }
 
 
-        static void ShowResults(ScanAndGroup pathToScan,string elapsedTime)
+        static void ShowResults(Searcher pathToScan, string elapsedTime)
         {
             ICollection<string> Keys = pathToScan.filterFiles.Keys;
             if (pathToScan.saveToFile)
