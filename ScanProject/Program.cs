@@ -54,8 +54,6 @@ arg1 -  Name of file result. (Example - result.txt)");
             ShowResults(pathToScan, elapsedTime);
             Console.WriteLine("The program was successfully done!");
             Console.ReadKey();
-           
-            
         }
 
 

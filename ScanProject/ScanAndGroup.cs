@@ -34,8 +34,11 @@ namespace ScanProject
             IEnumerable<FileInfo> fileList = dir.GetFiles("*.*", SearchOption.AllDirectories);
             countDir = dir.GetDirectories().Count();
             countFiles = fileList.Count();
-
-
+            GetHashesAndNamesOfFiles(fileList);
+            
+        }
+        public void GetHashesAndNamesOfFiles(IEnumerable<FileInfo> fileList)
+        {
             Dictionary<string, string> filesAndHashes = new Dictionary<string, string>();
             
             foreach (var file in fileList)
