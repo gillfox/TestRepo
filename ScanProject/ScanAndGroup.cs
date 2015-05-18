@@ -13,18 +13,18 @@ namespace ScanProject
 {
     class ScanAndGroup
     {
-        int countFiles, countDir;
-        string pathToFile;
-        public Stopwatch stopWatch = new Stopwatch();
+        public int countFiles, countDir;
+        public string pathToFile;
         public bool saveToFile { get; set;}
+        public Dictionary<string, List<string>> filterFiles;
 
         public ScanAndGroup()
         {
             countFiles = 0;
             countDir = 0;
             pathToFile = "";
-            stopWatch.Start();
             saveToFile = false;
+            filterFiles = new Dictionary<string, List<string>>();
         }
 
         public void ScanPath(string pathToDir, string nameOfFile = "result.txt")
@@ -34,6 +34,7 @@ namespace ScanProject
             IEnumerable<FileInfo> fileList = dir.GetFiles("*.*", SearchOption.AllDirectories);
             countDir = dir.GetDirectories().Count();
             countFiles = fileList.Count();
+
 
             Dictionary<string, string> filesAndHashes = new Dictionary<string, string>();
             
@@ -45,30 +46,28 @@ namespace ScanProject
             FilterForFiles(filesAndHashes);
         }
 
-        public void FilterForFiles ( Dictionary<string, string> filesAndHashes)
+        public void FilterForFiles (Dictionary<string, string> filesAndHashes)
         {
-            Dictionary<string, List<string>> filterFiles = new Dictionary<string, List<string>>();
-            foreach (var key in filesAndHashes.Keys)
+            foreach (var hash in filesAndHashes.Values)
             {
                 List<string> similFiles = new List<string>();
-                string HashCodeOfFile = filesAndHashes[key];
-                if (filterFiles.ContainsKey(HashCodeOfFile))
+                
+                if (filterFiles.ContainsKey(hash))
                 {
                     continue;
                 }
                 foreach (var similKey in filesAndHashes.Keys)
                 {
-                    if (HashCodeOfFile == filesAndHashes[similKey])
+                    if (hash == filesAndHashes[similKey])
                     {
                         similFiles.Add(similKey);
                     }
                 }
-                if (similFiles.Count > 1 && HashCodeOfFile != "")
+                if (similFiles.Count > 1 && hash != "")
                 {
-                    filterFiles.Add(HashCodeOfFile, similFiles);
+                    filterFiles.Add(hash, similFiles);
                 }
             }
-            ShowResults(filterFiles);
         }
 
         private string ComputeMD5Checksum(string path)
@@ -91,44 +90,6 @@ namespace ScanProject
             catch
             {
                 return "";
-            }
-        }
-
-        private void ShowResults(Dictionary<string, List<string>> filterFiles)
-        {
-            stopWatch.Stop();
-            TimeSpan ts = stopWatch.Elapsed;
-            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-            ts.Hours, ts.Minutes, ts.Seconds,
-            ts.Milliseconds / 10);
-
-            ICollection<string> Keys = filterFiles.Keys;
-            if (saveToFile)
-            {   
-                StreamWriter textFile = new StreamWriter(pathToFile);
-                
-                foreach (string key in Keys)
-                {
-                    textFile.WriteLine("\n\n\n\nGroup name : " + key);
-                    foreach (string item in filterFiles[key])
-                    {
-                        textFile.WriteLine(item);
-                    }
-                }
-                textFile.WriteLine("\n\n\nDirectories : {0} Files : {1} Run Time : {2} ", this.countDir, this.countFiles, elapsedTime);
-                textFile.Close();
-            }
-            else
-            {
-                foreach (string key in Keys)
-                {
-                    Console.WriteLine("\n\n\n\nGroup name : " + key);
-                    foreach (string item in filterFiles[key])
-                    {
-                        Console.WriteLine(item);
-                    }   
-                }
-                Console.WriteLine("\n\n\nDirectories : {0} Files : {1} Run Time : {2} ", this.countDir, this.countFiles, elapsedTime);
             }
         }
     }
